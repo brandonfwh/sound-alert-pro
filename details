@@ -1,0 +1,181 @@
+A client-server architecture where a Raspberry Pi acts as a sound detection server and Android apps act as clients, communicating via HTTP REST API.
+Components & Communication Flow
+1. Raspberry Pi Server (sound_server.py)
+
+Role: Continuous sound monitoring and detection hub
+Technologies: Flask (Python web framework), TensorFlow Lite, YAMNet AI model
+
+Key Functions:
+
+    Listens via USB microphone in 2-second intervals
+
+    Runs audio through YAMNet (521-class sound classifier)
+
+    Filters detections based on user preferences
+
+    Serves web interface and API endpoints
+
+    Manages alert history and system state
+
+2. Android Control App (MIT App Inventor)
+
+Role: User interface for system control and monitoring
+Technologies: MIT App Inventor (block-based), HTTP client components
+
+Key Functions:
+
+    Start/stop sound monitoring
+
+    Configure sound preferences
+
+    Display recent alerts
+
+    Show local notifications
+
+3. Web Dashboard
+
+Role: Professional monitoring interface for judges/demo
+Technology: Flask-rendered HTML/CSS with real-time data
+
+Key Functions:
+
+    Real-time alert display with color coding
+
+    System statistics and health monitoring
+
+    Historical alert visualization
+
+API Endpoints & Communication
+Control Endpoints:
+text
+
+GET  /start                    → Start sound monitoring
+GET  /stop                     → Stop sound monitoring
+GET  /api/enabled_sounds       → Update sound preferences
+
+Data Endpoints:
+text
+
+GET  /api/alerts               → Returns JSON of recent alerts
+GET  /dashboard                → Returns HTML dashboard
+GET  /                         → Server status page
+
+Data Flow & Integration
+1. Initialization Flow:
+text
+
+App Starts → GET /stop (ensure clean state) → Load user preferences → Ready
+
+2. Monitoring Activation:
+text
+
+User taps "START" → POST /api/enabled_sounds (send preferences) → GET /start → Monitoring begins
+
+3. Continuous Monitoring:
+text
+
+Pi: Every 2 seconds
+  1. Record audio → AI processing → If match & enabled → Store alert
+  2. Repeat indefinitely
+
+App: Every 5 seconds (polling)
+  1. GET /api/alerts → Parse JSON → Update display → Show notifications
+  2. Repeat while monitoring active
+
+4. Alert Processing Pipeline:
+text
+
+Audio Input → YAMNet Classification → Confidence Check → User Filter → 
+If Enabled: Store Alert → Update Dashboard → Send Notification → Broadcast via WebSocket
+
+Network Configuration
+Home Setup:
+
+    Pi on home Wi-Fi (e.g., 192.168.6.52)
+
+    App hardcoded to Pi's home IP
+
+    All communication via HTTP port 5000
+
+Portable Setup (School/Competition):
+
+    Travel router creates isolated network (e.g., 192.168.0.x)
+
+    Pi connects to router (Wi-Fi/Ethernet)
+
+    App updated with Pi's new router-assigned IP
+
+    No internet required - fully self-contained
+
+Data Structures
+Alert Object (JSON):
+json
+
+{
+  "sound": "Fire alarm",
+  "confidence": 0.92,
+  "timestamp": "14:30:22",
+  "id": 1234567890
+}
+
+Enabled Sounds (JSON):
+json
+
+{
+  "sounds": ["Fire alarm", "Doorbell", "Baby crying"]
+}
+
+Key Technical Features
+1. Smart Filtering:
+
+    Server-side filtering based on user preferences
+
+    Only processes and alerts for enabled sounds
+
+    Default safety sounds always enabled
+
+2. Notification Throttling:
+
+    Prevents duplicate notifications for same sound within 30 seconds
+
+    Different sounds always trigger notifications
+
+    Ensures user isn't overwhelmed
+
+3. Multi-Sound Detection:
+
+    Detects multiple sounds in same audio clip
+
+    Primary sound + secondary sounds above threshold
+
+    Critical for noisy environments
+
+4. Offline Operation:
+
+    Entire system works without internet
+
+    Router creates isolated network bubble
+
+    Perfect for competition environments
+
+Competition-Ready Features
+
+    Professional Dashboard - Judges can view real-time detection
+
+    Mobile Control - Intuitive app for system management
+
+    Push Notifications - Immediate alerts for critical sounds
+
+    Portable Setup - Works anywhere with travel router
+
+    Accessibility Focus - Solves real problem for deaf/hard-of-hearing
+
+System Requirements
+
+    Raspberry Pi 4 with USB microphone
+
+    Android phone with MIT App Inventor app
+
+    Travel router (for portable operation)
+
+    Power source for Pi and router
