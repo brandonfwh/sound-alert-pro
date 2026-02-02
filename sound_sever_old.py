@@ -1,3 +1,7 @@
+# Project: Sound Alert Pro
+# Author: Brandon Whitehead
+# Original Creation Date: September 14, 2025
+
 from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
